@@ -1,32 +1,24 @@
-output "endpoint" {
-  value = aws_db_instance.postgres.endpoint
+output "db_instance_address" {
+  description = "The address of the RDS instance."
+  value       = aws_db_instance.main.address
 }
 
-output "port" {
-  value = aws_db_instance.postgres.port
+output "db_instance_port" {
+  description = "The port of the RDS instance."
+  value       = aws_db_instance.main.port
 }
 
-output "database_name" {
-  value = aws_db_instance.postgres.db_name
+output "db_instance_name" {
+  description = "The database name."
+  value       = aws_db_instance.main.db_name
 }
 
-output "master_username" {
-  value = aws_db_instance.postgres.username
+output "db_instance_username" {
+  description = "The master username for the database."
+  value       = aws_db_instance.main.username
 }
 
-output "resource_id" {
-  value = aws_db_instance.postgres.resource_id
+output "db_instance_arn" {
+  description = "The ARN of the RDS instance."
+  value       = aws_db_instance.main.arn
 }
-
-output "arn" {
-  value = aws_db_instance.postgres.arn
-}
-
-output "address" {
-  value = aws_db_instance.postgres.address
-}
-
-output "secret_arn" {
-  value = aws_secretsmanager_secret.db_password.arn
-}
-
