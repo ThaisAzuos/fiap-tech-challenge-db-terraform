@@ -1,16 +1,27 @@
-variable "allocated_storage" {
+variable "aws_region" {
+  description = "The AWS region to deploy resources."
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "environment" {
+  description = "The environment name (e.g., dev, prod)."
+  type        = string
+}
+
+variable "db_allocated_storage" {
   description = "The amount of allocated storage for the DB instance."
   type        = number
   default     = 20
 }
 
-variable "engine_version" {
+variable "db_engine_version" {
   description = "The engine version to use for the DB instance."
   type        = string
   default     = "15.2"
 }
 
-variable "instance_class" {
+variable "db_instance_class" {
   description = "The instance type of the RDS instance."
   type        = string
   default     = "db.t4g.micro"
@@ -53,13 +64,8 @@ variable "db_subnet_group_name" {
   type        = string
 }
 
-variable "parameter_group_name" {
+variable "db_parameter_group_name" {
   description = "Name of the DB parameter group to associate with the DB instance."
   type        = string
   default     = "default.postgres15"
-}
-
-variable "environment" {
-  description = "The environment name (e.g., dev, prod)."
-  type        = string
 }
