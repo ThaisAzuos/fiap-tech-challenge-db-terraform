@@ -35,7 +35,7 @@ variable "database_name" {
 variable "instance_class" {
   description = "Instance class (db.t3.micro, db.t3.small, etc)"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t4g.micro" # Alterado de db.t3.micro para db.t4g.micro
 }
 
 variable "allocated_storage" {
@@ -115,4 +115,3 @@ variable "db_subnet_group_name" {
   type        = string
   default     = null
 }
-
