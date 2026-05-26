@@ -7,6 +7,7 @@ variable "aws_region" {
 variable "environment" {
   description = "The environment name (e.g., dev, prod)."
   type        = string
+  default     = "prod"
 }
 
 variable "db_allocated_storage" {
@@ -18,28 +19,31 @@ variable "db_allocated_storage" {
 variable "db_engine_version" {
   description = "The engine version to use for the DB instance."
   type        = string
-  default     = "15.2"
+  default     = "16.3"
 }
 
 variable "db_instance_class" {
   description = "The instance type of the RDS instance."
   type        = string
-  default     = "db.t4g.micro"
+  default     = "db.t3.micro"
 }
 
 variable "db_instance_identifier" {
   description = "The name of the DB instance."
   type        = string
+  default     = "oficina-db-prod"
 }
 
 variable "db_name" {
   description = "The name of the database to create when the DB instance is created."
   type        = string
+  default     = "oficina"
 }
 
 variable "db_username" {
   description = "Username for the master DB user."
   type        = string
+  default     = "oficina_admin"
 }
 
 variable "db_password" {
@@ -54,18 +58,18 @@ variable "db_port" {
   default     = 5432
 }
 
-variable "vpc_security_group_ids" {
-  description = "A list of VPC security group IDs to associate with the DB instance."
-  type        = list(string)
+variable "vpc_id" {
+  description = "The VPC ID where RDS will be deployed (from k8s-terraform output)."
+  type        = string
 }
 
-variable "db_subnet_group_name" {
-  description = "Name of the DB subnet group to associate with the DB instance."
-  type        = string
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for the DB subnet group (from k8s-terraform output)."
+  type        = list(string)
 }
 
 variable "db_parameter_group_name" {
   description = "Name of the DB parameter group to associate with the DB instance."
   type        = string
-  default     = "default.postgres15"
+  default     = "default.postgres16"
 }

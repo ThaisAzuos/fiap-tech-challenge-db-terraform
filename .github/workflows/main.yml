@@ -15,7 +15,6 @@ on:
       - '.github/workflows/main.yml'
 
 permissions:
-  id-token: write
   contents: read
   pull-requests: write
 
@@ -36,10 +35,12 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-db-terraform-role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
@@ -65,10 +66,12 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-db-terraform-role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
@@ -76,7 +79,12 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color -var "db_password=${{ secrets.DB_PASSWORD }}" -out=tfplan
+        run: |
+          terraform plan -no-color \
+            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "vpc_id=${{ secrets.VPC_ID }}" \
+            -var "private_subnet_ids=${{ secrets.PRIVATE_SUBNET_IDS }}" \
+            -out=tfplan
         continue-on-error: false
 
       - name: Upload Plan
@@ -115,10 +123,12 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-db-terraform-role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init
