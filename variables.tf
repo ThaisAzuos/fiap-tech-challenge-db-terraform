@@ -19,7 +19,7 @@ variable "db_allocated_storage" {
 variable "db_engine_version" {
   description = "The engine version to use for the DB instance."
   type        = string
-  default     = "16.3"
+  default     = "16"
 }
 
 variable "db_instance_class" {
