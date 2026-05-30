@@ -1,90 +1,171 @@
 # fiap-tech-challenge-db-terraform
 
-## 🎯 Propósito
-Este repositório contém a infraestrutura como código (IaC) para provisionar e gerenciar o banco de dados PostgreSQL na AWS, utilizando Terraform. Ele é responsável por criar a instância RDS, grupos de segurança e subnets necessários para o funcionamento do banco de dados da aplicação principal.
+## Propósito
 
-## 🛠️ Tech Stack
-- **Linguagem/Ferramenta**: HashiCorp Terraform
-- **Provedor Cloud**: AWS
-- **Serviço**: Amazon RDS for PostgreSQL (versão 15.2)
+Infraestrutura como código (IaC) para provisionar o banco de dados PostgreSQL na AWS usando Terraform. Este repositório cria a instância RDS, security group e subnet group dentro da VPC provisionada pelo repositório `k8s-terraform`.
 
-## 📊 Arquitetura
+**Faz parte do Tech Challenge Fase 3 — FIAP SOAT.**
+
+> **Dependência**: este repositório precisa dos outputs do [fiap-tech-challenge-k8s-terraform](https://github.com/ThaisAzuos/fiap-tech-challenge-k8s-terraform) (`vpc_id` e `private_subnet_ids`). Provisione o cluster EKS primeiro.
+
+## Arquitetura
+
 ```mermaid
 graph TD
-    subgraph AWS Cloud
-        subgraph VPC
+    subgraph AWS us-east-1
+        subgraph VPC 10.0.0.0/16
             subgraph Private Subnets
-                RDS_PostgreSQL[RDS PostgreSQL Instance]
+                RDS[(RDS PostgreSQL 16\nofficina-db-prod\ndb.t3.micro)]
+                EKS_NODES[EKS Worker Nodes]
             end
-            SecurityGroup[Security Group]
+            SG[Security Group\nPorta 5432 / 10.0.0.0/8]
         end
     end
-
-    Terraform[Terraform] --> AWS_Cloud
-    Terraform --> RDS_PostgreSQL
-    Terraform --> SecurityGroup
+    EKS_NODES -->|JDBC :5432| SG --> RDS
+    GH[GitHub Actions CI/CD] --> Terraform
+    Terraform --> AWS
 ```
-*Diagrama simplificado. A VPC e subnets são geralmente provisionadas por um módulo de rede separado ou pelo módulo EKS.*
 
-## 🚀 Quick Start (Setup Local)
-Para configurar e aplicar a infraestrutura do banco de dados localmente, siga os passos abaixo:
+## Tech Stack
 
-1.  **Pré-requisitos**:
-    *   Terraform CLI instalado (versão 1.0.0 ou superior).
-    *   AWS CLI configurado com credenciais de acesso e permissões adequadas.
+- **Terraform** >= 1.0
+- **AWS Provider** ~> 5.0
+- **Amazon RDS** PostgreSQL 16 (`db.t3.micro`)
+- **Backend S3** para armazenar o Terraform state
 
-2.  **Clonar o repositório**:
-    ```bash
-    git clone https://github.com/fiap-tech-challenge/fiap-tech-challenge-db-terraform.git
-    cd fiap-tech-challenge-db-terraform
-    ```
+## Estrutura do Projeto
 
-3.  **Inicializar o Terraform**:
-    ```bash
-    terraform init
-    ```
+```
+.
+├── main.tf              ← Security Group, DB Subnet Group e chamada do módulo RDS
+├── variables.tf         ← Variáveis de entrada (vpc_id, private_subnet_ids, db_password…)
+├── outputs.tf           ← Outputs exportados (db_address, db_port, db_name…)
+├── versions.tf          ← Versões dos providers e backend S3
+└── modules/
+    └── rds/
+        ├── main.tf      ← Recurso aws_db_instance
+        ├── variables.tf ← Variáveis do módulo
+        └── outputs.tf   ← Outputs do módulo (endereço, porta, nome)
+```
 
-4.  **Planejar a infraestrutura**:
-    Crie um arquivo `terraform.tfvars` na raiz do projeto com as variáveis necessárias (substitua os valores de exemplo):
-    ```hcl
-    aws_region               = "us-east-1"
-    environment              = "development"
-    db_instance_identifier   = "oficinamecanica-db-dev"
-    db_name                  = "oficinamecanica"
-    db_username              = "admin"
-    db_password              = "SuaSenhaSeguraAqui" # Use uma senha forte e segura
-    vpc_security_group_ids   = ["sg-xxxxxxxxxxxxxxxxx"] # ID do Security Group da sua VPC
-    db_subnet_group_name     = "sua-db-subnet-group" # Nome do DB Subnet Group da sua VPC
-    ```
-    Em seguida, execute o plano:
-    ```bash
-    terraform plan
-    ```
+## Pré-requisitos
 
-5.  **Aplicar a infraestrutura**:
-    ```bash
-    terraform apply
-    ```
-    Confirme a aplicação digitando `yes` quando solicitado.
+- [Terraform CLI](https://developer.hashicorp.com/terraform/downloads) >= 1.0
+- [AWS CLI](https://aws.amazon.com/cli/) configurado com credenciais válidas
+- Cluster EKS e VPC já provisionados (outputs de `vpc_id` e `private_subnet_ids`)
+- Bucket S3 para armazenar o Terraform state (ex: `fiap-tc-terraform-state`)
 
-## 📋 Deploy (CI/CD)
-O deploy da infraestrutura do banco de dados é automatizado via GitHub Actions.
+> **AWS Academy**: use as credenciais temporárias do painel "AWS Details" > "Show". Elas expiram a cada ~4h.
 
--   **Workflow**: `.github/workflows/main.yml`
--   **Gatilhos**: `push` para a branch `main` e `pull_request` para a branch `main`.
--   **Etapas**:
-    1.  `terraform init`: Inicializa o Terraform.
-    2.  `terraform validate`: Valida a sintaxe e configuração do Terraform.
-    3.  `terraform plan`: Gera um plano de execução (executado em Pull Requests).
-    4.  `terraform apply`: Aplica as mudanças na AWS (executado em `push` para `main`, requer aprovação manual).
+## Quick Start
 
-**Secrets Necessários no GitHub Actions**:
--   `AWS_ACCESS_KEY_ID`
--   `AWS_SECRET_ACCESS_KEY`
--   `DB_PASSWORD` (para a senha do banco de dados)
+### 1. Configurar credenciais AWS
 
-## 🔗 Links Relacionados
--   [Aplicação Principal (fiap-tech-challenge-app)](../fiap-tech-challenge-app)
--   [Infraestrutura Kubernetes (fiap-tech-challenge-k8s-terraform)](../fiap-tech-challenge-k8s-terraform)
--   [Autenticação Lambda (fiap-tech-challenge-lambda-auth)](../fiap-tech-challenge-lambda-auth)
--   [Documentação Geral da Fase 3](../../docs/Fase03/ADRs.md)
+```bash
+aws configure set aws_access_key_id     SEU_ACCESS_KEY
+aws configure set aws_secret_access_key SEU_SECRET_KEY
+aws configure set aws_session_token     SEU_SESSION_TOKEN
+aws configure set region                us-east-1
+```
+
+### 2. Criar arquivo de variáveis
+
+Crie `terraform.tfvars` na raiz (não commitar — já está no `.gitignore`):
+
+```hcl
+environment            = "prod"
+db_instance_identifier = "oficina-db-prod"
+db_name                = "oficina"
+db_username            = "oficina_admin"
+db_password            = "SuaSenhaSeguraAqui"
+db_instance_class      = "db.t3.micro"
+db_engine_version      = "16"
+db_allocated_storage   = 20
+
+# Obter dos outputs do k8s-terraform:
+# terraform output vpc_id
+# terraform output -json private_subnet_ids
+vpc_id             = "vpc-xxxxxxxxxxxxxxxxx"
+private_subnet_ids = ["subnet-xxxxxxxxxxxxxxxxx", "subnet-yyyyyyyyyyyyyyyyy"]
+```
+
+### 3. Inicializar e aplicar
+
+```bash
+terraform init \
+  -backend-config="bucket=SEU_BUCKET_S3" \
+  -backend-config="key=rds/terraform.tfstate" \
+  -backend-config="region=us-east-1"
+
+terraform plan \
+  -var "vpc_id=vpc-xxx" \
+  -var 'private_subnet_ids=["subnet-xxx","subnet-yyy"]'
+
+terraform apply \
+  -var "vpc_id=vpc-xxx" \
+  -var 'private_subnet_ids=["subnet-xxx","subnet-yyy"]'
+```
+
+## Outputs
+
+Após o `terraform apply`, os seguintes valores são exportados (usados pelos outros repos):
+
+| Output | Descrição | Usado por |
+|--------|-----------|-----------|
+| `db_address` | Endpoint do RDS (hostname) | app → `DB_HOST`; lambda → `DB_HOST` |
+| `db_port` | Porta do PostgreSQL (5432) | app → `DB_PORT` |
+| `db_name` | Nome do banco de dados | app → `DB_NAME` |
+| `db_username` | Usuário master do banco | app → `DB_USER` |
+| `db_arn` | ARN da instância RDS | referência interna |
+
+Para consultar os outputs após o apply:
+
+```bash
+terraform output db_address
+```
+
+## Deploy CI/CD (GitHub Actions)
+
+O pipeline possui 3 jobs executados em sequência:
+
+1. **terraform-validate** — inicializa, valida sintaxe e verifica formatação (`terraform fmt -check`)
+2. **terraform-plan** — gera o plano de execução; em Pull Requests, posta o plano como comentário
+3. **terraform-apply** — aplica na AWS (somente push para `main`)
+
+**Secrets necessários no repositório:**
+
+| Secret | Descrição |
+|--------|-----------|
+| `AWS_ACCESS_KEY_ID` | Credencial AWS |
+| `AWS_SECRET_ACCESS_KEY` | Credencial AWS |
+| `AWS_SESSION_TOKEN` | Token de sessão (AWS Academy) |
+| `TF_STATE_BUCKET` | Nome do bucket S3 para o state |
+| `DB_PASSWORD` | Senha do banco de dados |
+| `VPC_ID` | ID da VPC (output do k8s-terraform) |
+| `PRIVATE_SUBNET_IDS` | Lista JSON das subnets privadas (output do k8s-terraform) |
+
+## Custo Estimado (AWS Academy)
+
+| Recurso | Custo |
+|---------|-------|
+| RDS db.t3.micro (PostgreSQL 16) | ~$13/mês ($0.017/h) |
+| Storage 20 GB gp2 | ~$2/mês |
+| **Total estimado** | **~$15/mês** |
+
+> No AWS Academy o custo é coberto pelos créditos do laboratório.
+
+## Limpeza de Recursos
+
+```bash
+terraform destroy \
+  -var "vpc_id=vpc-xxx" \
+  -var 'private_subnet_ids=["subnet-xxx","subnet-yyy"]'
+```
+
+## Repositórios Relacionados
+
+| Repo | Descrição |
+|------|-----------|
+| [fiap-tech-challenge-k8s-terraform](https://github.com/ThaisAzuos/fiap-tech-challenge-k8s-terraform) | Cluster EKS — **provisione antes deste repo** |
+| [fiap-tech-challenge-lambda-auth](https://github.com/ThaisAzuos/fiap-tech-challenge-lambda-auth) | Autenticação serverless Lambda — usa `db_address` deste repo |
+| [fiap-tech-challenge-app](https://github.com/ThaisAzuos/fiap-tech-challenge-app) | Aplicação principal Spring Boot — usa `db_address` deste repo |
