@@ -63,11 +63,6 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "private_subnet_ids" {
-  description = "List of private subnet IDs for the DB subnet group (from k8s-terraform output)."
-  type        = list(string)
-}
-
 variable "db_parameter_group_name" {
   description = "Name of the DB parameter group to associate with the DB instance."
   type        = string

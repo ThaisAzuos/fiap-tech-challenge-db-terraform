@@ -83,7 +83,6 @@ jobs:
           terraform plan -no-color \
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "vpc_id=${{ secrets.VPC_ID }}" \
-            -var 'private_subnet_ids=["${{ secrets.PRIVATE_SUBNET_ID_1 }}","${{ secrets.PRIVATE_SUBNET_ID_2 }}"]' \
             -out=tfplan
         continue-on-error: false
 

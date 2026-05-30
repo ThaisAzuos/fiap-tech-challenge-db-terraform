@@ -23,9 +23,20 @@ resource "aws_security_group" "rds" {
   }
 }
 
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [var.vpc_id]
+  }
+  filter {
+    name   = "map-public-ip-on-launch"
+    values = ["false"]
+  }
+}
+
 resource "aws_db_subnet_group" "rds" {
   name       = "oficina-db-subnet-group-${var.environment}"
-  subnet_ids = var.private_subnet_ids
+  subnet_ids = data.aws_subnets.private.ids
 
   tags = {
     Name        = "oficina-db-subnet-group-${var.environment}"
