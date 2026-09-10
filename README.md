@@ -1,5 +1,7 @@
 # fiap-tech-challenge-db-terraform
 
+> **Fase 4 (Tech Challenge):** o RDS PostgreSQL provisionado neste repositório passa a ser de uso **exclusivo do OS Service**. Os demais microsserviços (Billing e Execution) usam MongoDB próprio, provisionado via Helm em `fiap-tech-challenge-k8s-terraform`. Veja a visão geral em `docs/arquitetura/fase4-visao-geral.md` no repositório `fiap-tech-challenge-app` e a decisão em [`docs/ADRs/ADR-001-rds-dedicado-os-service.md`](docs/ADRs/ADR-001-rds-dedicado-os-service.md).
+
 ## Propósito
 
 Infraestrutura como código (IaC) para provisionar o banco de dados PostgreSQL na AWS usando Terraform. Este repositório cria a instância RDS, security group e subnet group dentro da VPC provisionada pelo repositório `k8s-terraform`.
